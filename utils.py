@@ -121,45 +121,59 @@ def write2canvas(imgs,spaces,indents,imgs_per_line):
         np.array[np.uint8]: Array of images equivalent to the pages in the document.
     """
     
-  w, h = 2500, 2700
-  data = np.zeros((h, w, 3), dtype=np.uint8)
-  data[0:2700, 0:2500] = [255,255, 255] 
-  canvas = im.fromarray(data, 'RGB')
-  offset_w, offset_h = 20,20
+  w, h = 2500, 2700 # Setting page width
+  data = np.zeros((h, w, 3), dtype=np.uint8) # Creating np array of zeros of size h*w 
+  data[0:2700, 0:2500] = [255,255, 255] # Setting each value to RGB white value
+  
+  offset_w, offset_h = 20,20 #Setting starting position of paste the images
   offset = 0, 0
-  pages = math.ceil(len(imgs_per_line)/30)
+  pages = math.ceil(len(imgs_per_line)/30) # Finding no. of pages
   
   out = []
-  img = iter(imgs)
+  img = iter(imgs) # Iterator for images of all the generated images of words
   for page in range(pages):
     line =0
-    canvas = im.fromarray(data, 'RGB')
+    canvas = im.fromarray(data, 'RGB') #Creating new PIL image canvas to overwrite the generated images on it
     while(offset_h < 2700):
       no_of_words = imgs_per_line[line]
-      sdct = spaces[line]
-      idct = indents[line]
+      sdct = spaces[line] #Extracting the space set for the current line
+      idct = indents[line] #Extracting the indent set for the current line
       for count in range(no_of_words): 
     
-        if count in sdct:
+        if count in sdct: #Checking if space is required
           offset_w = offset_w + 20 
           continue
 
-        if count in idct:
+        if count in idct: #Checking if indent is required
           offset_w = offset_w + 80
           continue
 
-        st=im.fromarray(next(img))
-        st_w, st_h = st.size
-        offset = (offset_w, offset_h)
-        canvas.paste(st, offset)
-        offset_w =offset_w + st_w
-      offset_h =offset_h + 90
+        st=im.fromarray(next(img)) # Storing next image in a variable
+        st_w, st_h = st.size # Getting the image size
+        offset = (offset_w, offset_h) # Set the pasting position for the new image
+        canvas.paste(st, offset) # Overwrite the generated image over the canvas
+        offset_w =offset_w + st_w # Update the offset width
+      offset_h =offset_h + 90 # Update the offset width
       offset_w = 20
-      line=line+1
+      line=line+1 # Update the line no.
     # canvas.save('page'+str(page)+'.png')
-    out.append(np.array(canvas))
+    out.append(np.array(canvas)) # Append the canvas in a np array
   return out
 
+def canvas_threshold(imgs):
+    '''Grayscales removes all the noise from the images
+    
+    Args:
+        imgs (np.array[np.uint8]): Array of images equivalent to the pages in the document.
+        
+    Returns:
+         (np.array[np.uint8]): Array of grayscaled and noise removed images equivalent to the pages in the document.
+        '''
+    for i in imgs:
+        i = cv2.cvtColor(i, cv2.COLOR_RGB2GRAY) # Grayscaling the image
+        _, i = cv2.threshold(i, 127, 255, cv2.THRESH_OTSU) # thresholding with Otsu's method for binarization
+    
+    return imgs
 def postprocess_images(imgs, doc):
     #TODO
     pass
